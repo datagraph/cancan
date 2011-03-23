@@ -226,6 +226,16 @@ if ENV["MODEL_ADAPTER"].nil? || ENV["MODEL_ADAPTER"] == "active_record"
       @ability.should_not be_able_to(:read, article2)
     end
 
+    it "should restrict articles given multiple conditions with a MetaWhere condition" do
+      @ability.can :read, Article, :priority.lt => 2
+      @ability.can :read, Article, :category => {:visible => true}
+      article1 = Article.create!(:priority => 1, :name => 'Jorgene', :category => Category.create!(:visible => true))
+      article2 = Article.create!(:priority => 3, :name => 'Lolo', :category => Category.create!(:visible => true))
+      Article.accessible_by(@ability, :read).should == [article1, article2]
+      @ability.should be_able_to(:read, article1)
+      @ability.should be_able_to(:read, article2)
+    end
+
     it "should match any MetaWhere condition" do
       adapter = CanCan::ModelAdapters::ActiveRecordAdapter
       article1 = Article.new(:priority => 1, :name => "Hello World")

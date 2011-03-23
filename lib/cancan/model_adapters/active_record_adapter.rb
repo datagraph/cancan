@@ -113,7 +113,7 @@ module CanCan
         if conditions_hash.blank?
           behavior ? true_sql : false_sql
         else
-          conditions = sanitize_sql(conditions_hash)
+          conditions = @model_class.where(conditions_hash).arel.where_clauses.collect{|c| c.gsub(/^\(+/, '').gsub(/\)+$/, '') }.join(" AND ")          
           case sql
           when true_sql
             behavior ? true_sql : "not (#{conditions})"
