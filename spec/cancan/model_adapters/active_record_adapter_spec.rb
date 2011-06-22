@@ -56,6 +56,11 @@ if ENV["MODEL_ADAPTER"].nil? || ENV["MODEL_ADAPTER"] == "active_record"
       CanCan::ModelAdapters::AbstractAdapter.adapter_class(Article).should == CanCan::ModelAdapters::ActiveRecordAdapter
     end
 
+    it "should find record" do
+      article = Article.create!
+      CanCan::ModelAdapters::ActiveRecordAdapter.find(Article, article.id).should == article
+    end
+
     it "should not fetch any records when no abilities are defined" do
       Article.create!
       Article.accessible_by(@ability).should be_empty
@@ -124,6 +129,15 @@ if ENV["MODEL_ADAPTER"].nil? || ENV["MODEL_ADAPTER"] == "active_record"
       article2 = Article.create!(:secret => false)
       Article.accessible_by(@ability).should == [article1]
     end
+
+    it "should fetch only associated records when using with a scope for conditions" do
+      @ability.can :read, Article, Article.where(:secret => true)
+      category1 = Category.create!(:visible => false)
+      category2 = Category.create!(:visible => true)
+      article1 = Article.create!(:secret => true, :category => category1)
+      article2 = Article.create!(:secret => true, :category => category2)
+      category1.articles.accessible_by(@ability).should == [article1]
+    end    
 
     it "should raise an exception when trying to merge scope with other conditions" do
       @ability.can :read, Article, :published => true

@@ -36,6 +36,11 @@ if ENV["MODEL_ADAPTER"] == "data_mapper"
       CanCan::ModelAdapters::AbstractAdapter.adapter_class(Article).should == CanCan::ModelAdapters::DataMapperAdapter
     end
 
+    it "should find record" do
+      article = Article.create
+      CanCan::ModelAdapters::DataMapperAdapter.find(Article, article.id).should == article
+    end
+
     it "should not fetch any records when no abilities are defined" do
       Article.create
       Article.accessible_by(@ability).should be_empty
@@ -65,7 +70,6 @@ if ENV["MODEL_ADAPTER"] == "data_mapper"
     end
 
     it "should fetch only the articles that are published and not secret" do
-      pending "the `cannot` may require some custom SQL, maybe abstract out from Active Record adapter"
       @ability.can :read, Article, :published => true
       @ability.cannot :read, Article, :secret => true
       article1 = Article.create(:published => true, :secret => false)

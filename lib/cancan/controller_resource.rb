@@ -100,8 +100,20 @@ module CanCan
       if @options[:singleton] && parent_resource.respond_to?(name)
         parent_resource.send(name)
       else
-        @options[:find_by] ? resource_base.send("find_by_#{@options[:find_by]}!", id_param) : resource_base.find(id_param)
+        if @options[:find_by]
+          if resource_base.respond_to? "find_by_#{@options[:find_by]}!"
+            resource_base.send("find_by_#{@options[:find_by]}!", id_param)
+          else
+            resource_base.send(@options[:find_by], id_param)
+          end
+        else
+          adapter.find(resource_base, id_param)
+        end
       end
+    end
+
+    def adapter
+      ModelAdapters::AbstractAdapter.adapter_class(resource_class)
     end
 
     def authorization_action
@@ -159,7 +171,7 @@ module CanCan
         elsif @options[:shallow]
           resource_class
         else
-          raise AccessDenied # maybe this should be a record not found error instead?
+          raise AccessDenied.new(nil, authorization_action, resource_class) # maybe this should be a record not found error instead?
         end
       else
         resource_class
@@ -178,7 +190,7 @@ module CanCan
     def fetch_parent(name)
       if @controller.instance_variable_defined? "@#{name}"
         @controller.instance_variable_get("@#{name}")
-      elsif @controller.respond_to? name
+      elsif @controller.respond_to?(name, true)
         @controller.send(name)
       end
     end

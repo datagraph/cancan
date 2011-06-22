@@ -235,7 +235,10 @@ describe CanCan::ControllerResource do
     resource = CanCan::ControllerResource.new(@controller, :through => :category)
     lambda {
       resource.load_resource
-    }.should raise_error(CanCan::AccessDenied)
+    }.should raise_error(CanCan::AccessDenied) { |exception|
+      exception.action.should == :show
+      exception.subject.should == Project
+    }
     @controller.instance_variable_get(:@project).should be_nil
   end
 
@@ -329,6 +332,14 @@ describe CanCan::ControllerResource do
     project = Project.create!(:name => "foo")
     @params.merge!(:action => "show", :id => "foo")
     resource = CanCan::ControllerResource.new(@controller, :find_by => :name)
+    resource.load_resource
+    @controller.instance_variable_get(:@project).should == project
+  end
+
+  it "should allow full find method to be passed into find_by option" do
+    project = Project.create!(:name => "foo")
+    @params.merge!(:action => "show", :id => "foo")
+    resource = CanCan::ControllerResource.new(@controller, :find_by => :find_by_name)
     resource.load_resource
     @controller.instance_variable_get(:@project).should == project
   end

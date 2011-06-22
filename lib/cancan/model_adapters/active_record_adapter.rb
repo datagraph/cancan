@@ -87,7 +87,7 @@ module CanCan
 
       def database_records
         if override_scope
-          override_scope
+          @model_class.scoped.merge(override_scope)
         elsif @model_class.respond_to?(:where) && @model_class.respond_to?(:joins)
           @model_class.where(conditions).joins(joins)
         else
@@ -99,7 +99,7 @@ module CanCan
 
       def override_scope
         conditions = @rules.map(&:conditions).compact
-        if conditions.any? { |c| c.kind_of?(ActiveRecord::Relation) }
+        if defined?(ActiveRecord::Relation) && conditions.any? { |c| c.kind_of?(ActiveRecord::Relation) }
           if conditions.size == 1
             conditions.first
           else

@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = "cancan"
-  s.version     = "1.6.2"
+  s.version     = "1.6.5"
   s.author      = "Ryan Bates"
   s.email       = "ryan@railscasts.com"
   s.homepage    = "http://github.com/ryanb/cancan"
@@ -11,7 +11,7 @@ Gem::Specification.new do |s|
   s.require_path = "lib"
 
   s.add_development_dependency 'rspec', '~> 2.1.0'
-  s.add_development_dependency 'rails', '~> 3.0.0'
+  s.add_development_dependency 'rails', '~> 3.0.7'
   s.add_development_dependency 'rr', '~> 0.10.11' # 1.0.0 has respond_to? issues: http://github.com/btakita/rr/issues/issue/43
   s.add_development_dependency 'supermodel', '~> 0.1.4'
 

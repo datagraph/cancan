@@ -249,6 +249,13 @@ describe CanCan::Ability do
     @ability.can?(:read, 1..5).should be_true
     @ability.can?(:read, 4..6).should be_false
   end
+  
+  it "should not match subjects return nil for methods that must match nested a nested conditions hash" do
+    mock(object_with_foo = Object.new).foo { :bar }
+    @ability.can :read, Array, :first => { :foo => :bar }
+    @ability.can?(:read, [object_with_foo]).should be_true
+    @ability.can?(:read, []).should be_false
+  end
 
   it "should not stop at cannot definition when comparing class" do
     @ability.can :read, Range
@@ -317,9 +324,11 @@ describe CanCan::Ability do
     end
   end
 
-  it "should not raise access denied exception if ability is authorized to perform an action" do
+  it "should not raise access denied exception if ability is authorized to perform an action and return subject" do
     @ability.can :read, :foo
-    lambda { @ability.authorize!(:read, :foo) }.should_not raise_error
+    lambda {
+      @ability.authorize!(:read, :foo).should == :foo
+    }.should_not raise_error
   end
 
   it "should know when block is used in conditions" do

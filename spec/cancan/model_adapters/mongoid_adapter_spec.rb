@@ -36,10 +36,24 @@ if ENV["MODEL_ADAPTER"] == "mongoid"
         CanCan::ModelAdapters::AbstractAdapter.adapter_class(MongoidProject).should == CanCan::ModelAdapters::MongoidAdapter
       end
 
+      it "should find record" do
+        project = MongoidProject.create
+        CanCan::ModelAdapters::MongoidAdapter.find(MongoidProject, project.id).should == project
+      end
+
       it "should compare properties on mongoid documents with the conditions hash" do
         model = MongoidProject.new
         @ability.can :read, MongoidProject, :id => model.id
         @ability.should be_able_to(:read, model)
+      end
+
+      it "should be able to read hashes when field is array" do
+        one_to_three = MongoidProject.create(:numbers => ['one', 'two', 'three'])
+        two_to_five  = MongoidProject.create(:numbers => ['two', 'three', 'four', 'five'])
+
+        @ability.can :foo, MongoidProject, :numbers => 'one'
+        @ability.should be_able_to(:foo, one_to_three)
+        @ability.should_not be_able_to(:foo, two_to_five)
       end
 
       it "should return [] when no ability is defined so no records are found" do
@@ -59,6 +73,15 @@ if ENV["MODEL_ADAPTER"] == "mongoid"
         MongoidProject.accessible_by(@ability, :read).entries.should == [sir]
       end
 
+      it "should be able to mix empty conditions and hashes" do
+        @ability.can :read, MongoidProject
+        @ability.can :read, MongoidProject, :title => 'Sir'
+        sir  = MongoidProject.create(:title => 'Sir')
+        lord = MongoidProject.create(:title => 'Lord')
+
+        MongoidProject.accessible_by(@ability, :read).count.should == 2
+      end
+
       it "should return everything when the defined ability is manage all" do
         @ability.can :manage, :all
         sir   = MongoidProject.create(:title => 'Sir')
@@ -68,6 +91,14 @@ if ENV["MODEL_ADAPTER"] == "mongoid"
         MongoidProject.accessible_by(@ability, :read).entries.should == [sir, lord, dude]
       end
 
+      it "should allow a scope for conditions" do
+        @ability.can :read, MongoidProject, MongoidProject.where(:title => 'Sir')
+        sir   = MongoidProject.create(:title => 'Sir')
+        lord  = MongoidProject.create(:title => 'Lord')
+        dude  = MongoidProject.create(:title => 'Dude')
+
+        MongoidProject.accessible_by(@ability, :read).entries.should == [sir]
+      end
 
       describe "Mongoid::Criteria where clause Symbol extensions using MongoDB expressions" do
         it "should handle :field.in" do
